@@ -17,6 +17,7 @@ write a response back
 package funHttpServer;
 
 import java.io.*;
+import org.json.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -199,23 +200,31 @@ class WebServer {
 
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
           // extract path parameters
-          query_pairs = splitQuery(request.replace("multiply?", ""));
+          try {
+            query_pairs = splitQuery(request.replace("multiply?", ""));
+          
 
-          // extract required fields from parameters
-          Integer num1 = Integer.parseInt(query_pairs.get("num1"));
-          Integer num2 = Integer.parseInt(query_pairs.get("num2"));
+            // extract required fields from parameters
+            Integer num1 = Integer.parseInt(query_pairs.get("num1"));
+            Integer num2 = Integer.parseInt(query_pairs.get("num2"));
 
-          // do math
-          Integer result = num1 * num2;
+            // do math
+            Integer result = num1 * num2;
 
-          // Generate response
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-          builder.append("Result is: " + result);
+            // Generate response
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Result is: " + result);
 
           // TODO: Include error handling here with a correct error code and
           // a response that makes sense
+          } catch (Exception e) {
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Format should read      /multiply?num1=_&num2=_  ");
+          }
 
         } else if (request.contains("github?")) {
           // pulls the query from the request and runs it with GitHub's REST API
@@ -226,18 +235,137 @@ class WebServer {
           // "Owner's repo is named RepoName. Example: find RepoName's contributors" translates to
           //     "/repos/OWNERNAME/REPONAME/contributors"
 
-          Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          query_pairs = splitQuery(request.replace("github?", ""));
-          String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
-          System.out.println(json);
+          try{
+            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+            query_pairs = splitQuery(request.replace("github?", ""));
+            String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
+            System.out.println(json);
 
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-          builder.append("Check the todos mentioned in the Java source file");
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            //builder.append("Check the todos mentioned in the Java source file");
           // TODO: Parse the JSON returned by your fetch and create an appropriate
           // response based on what the assignment document asks for
+          // saving it as JSON array (if it sere not an array it woudl need to be a JSONObject)
+          
+           JSONArray repoArray = new JSONArray(json);
 
+           // go through all the entries in the JSON array (so all the repos of the user)
+           for(int i=0; i<repoArray.length(); i++){
+              
+              JSONObject repo = repoArray.getJSONObject(i);
+
+              // get repo ID
+              int repoId = repo.getInt("id");
+
+              // get repo Name
+              String repoName = repo.getString("full_name");
+
+              // owner is a JSON object in the repo object, get it and save it in own variable then read the login name
+              JSONObject owner = repo.getJSONObject("owner");
+              String ownername = owner.getString("login");
+
+              System.out.println(repoId + "\n" + repoName + "\n" + ownername + "\n");
+              builder.append(repoId + "\n" + repoName + "\n" + ownername + "\n");
+            }
+          } catch (Exception e) {
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Format should read github?query=users/______/repos ");
+          }
+        } else if (request.contains("branches?")) {
+          // pulls the query from the request and runs it with GitHub's REST API
+          // check out https://docs.github.com/rest/reference/
+          //
+          // HINT: REST is organized by nesting topics. Figure out the biggest one first,
+          //     then drill down to what you care about
+          // "Owner's repo is named RepoName. Example: find RepoName's contributors" translates to
+          //     "/repos/OWNERNAME/REPONAME/contributors"
+
+          try{
+            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+            query_pairs = splitQuery(request.replace("branches?", ""));
+
+            String branchOwner = query_pairs.get("name");
+            String branchRepo = query_pairs.get("repo");
+            int branchCount = 0;
+
+            String json = fetchURL("https://api.github.com/repos/" + branchOwner + "/" + branchRepo + "/branches");
+            System.out.println(json);
+
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+          
+           JSONArray branchArray = new JSONArray(json);
+
+           // go through all the entries in the JSON array (so all the repos of the user)
+           for(int i=0; i<branchArray.length(); i++){
+            branchCount++;
+            }
+
+            builder.append("The number of branches in " + branchRepo + " is: " + branchCount);
+          } catch (Exception e) {
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Format should read github?query=users/______/repos ");
+          }
+        } else if (request.contains("commits?")) {
+          // pulls the query from the request and runs it with GitHub's REST API
+          // check out https://docs.github.com/rest/reference/
+          //
+          // HINT: REST is organized by nesting topics. Figure out the biggest one first,
+          //     then drill down to what you care about
+          // "Owner's repo is named RepoName. Example: find RepoName's contributors" translates to
+          //     "/repos/OWNERNAME/REPONAME/contributors"
+
+          try{
+            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+            query_pairs = splitQuery(request.replace("commits?", ""));
+
+            String commitsOwner = query_pairs.get("name");
+            String commitsRepo = query_pairs.get("repo");
+
+            String json = fetchURL("https://api.github.com/repos/" + commitsOwner + "/" + commitsRepo + "/commits");
+            System.out.println(json);
+
+            builder.append("HTTP/1.1 200 OK\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+          
+           JSONArray repoArray = new JSONArray(json);
+
+           // go through all the entries in the JSON array (so all the repos of the user)
+           for(int i=0; i<repoArray.length(); i++){
+
+            // now we have a JSON object, one repo 
+            JSONObject repo = repoArray.getJSONObject(i);
+
+            // get repo name
+            //String repoName = repo.getString("name");
+            //System.out.println(repoName);
+
+            // owner is a JSON object in the repo object, get it and save it in own variable then read the login name
+            JSONObject commit = repo.getJSONObject("commit");
+            String message = commit.getString("message");
+            System.out.println(message + "<br/>");
+            builder.append(message + "<br/>");
+
+            // create a new object for the repo we want to store add the repo name and owername to it
+            //JSONObject newRepo = new JSONObject();
+            //newRepo.put("name",repoName);
+            //newRepo.put("owner",ownername);
+            }
+
+          } catch (Exception e) {
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Format should read github?query=users/______/repos ");
+          }
         } else {
           // if the request is not recognized at all
 
