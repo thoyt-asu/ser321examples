@@ -51,7 +51,7 @@ public class Server {
 
   public static JSONObject error(String err) {
     JSONObject json = new JSONObject();
-    json.put("header", "error")
+    json.put("header", "error");
     json.put("error", err);
     return json;
   }
