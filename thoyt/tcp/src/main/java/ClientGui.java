@@ -197,7 +197,7 @@ public class ClientGui implements OutputPanel.EventHandlers {
     ClientGui main = new ClientGui();
 
     try {
-      sock = new Socket("localhost", port);
+      sock = new Socket(host, port);
       out = sock.getOutputStream();
       in = sock.getInputStream();
       ObjectInputStream ins = new ObjectInputStream(in);
