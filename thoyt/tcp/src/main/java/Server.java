@@ -60,6 +60,9 @@ public class Server {
     ServerSocket serv = null;
     Game game = new Game();
     boolean go = true;
+    if (args.length >= 1){
+      port = Integer.valueOf(args[0]);
+    }
     try {
       serv = new ServerSocket(port);
       // NOTE: SINGLE-THREADED, only one connection at a time

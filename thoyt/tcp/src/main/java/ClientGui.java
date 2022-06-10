@@ -50,9 +50,9 @@ public class ClientGui implements OutputPanel.EventHandlers {
   PicturePanel picturePanel;
   OutputPanel outputPanel;
   static String greeting = "";
-  static int port = 8080;
+  //int port = 8080;
   static Socket sock = null;
-  static String host = "localhost";
+  //String host = "localhost";
   static Scanner scanner = new Scanner(System.in);
   static OutputStream out;
   static InputStream in;
@@ -194,6 +194,14 @@ public class ClientGui implements OutputPanel.EventHandlers {
 
   public static void main(String[] args) throws IOException, ClassNotFoundException {
     // create the frame
+    String host = "localhost";
+    int port = 8080;
+    if (args.length >= 1){ // host, if provided
+      host=args[0];
+    }
+    if (args.length >= 2){
+      port = Integer.valueOf(args[1]);
+    }
     ClientGui main = new ClientGui();
 
     try {
