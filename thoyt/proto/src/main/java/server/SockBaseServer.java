@@ -99,6 +99,7 @@ class SockBaseServer implements Runnable {
                         .build();
                     response.writeDelimitedTo(out);
                     quit = true;
+                    System.out.println("----Client " + name + " has left----");
                 } else if (op.getOperationType() == Request.OperationType.LEADER) {
                     System.out.println("---LEADER Request---");
                     Response.Builder response2 = Response.newBuilder();
@@ -319,7 +320,7 @@ class SockBaseServer implements Runnable {
 
     public static void main (String args[]) throws Exception {
         Game game = new Game();
-        int pool = 2;
+        int pool = 5;
 
         if (args.length != 2) {
             System.out.println("Expected arguments: <port(int)> <delay(int)>");
